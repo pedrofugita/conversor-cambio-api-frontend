@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de Moedas</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 350px;
+            text-align: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .logo span { background: #ffd400; padding: 2px 8px; border-radius: 4px; }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: #0047bb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+        button:hover { background-color: #003388; }
+        
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #eef2ff;
+            border-radius: 8px;
+            display: none; 
+        }
+        .result-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #0047bb;
+        }
+        .rate-info { font-size: 12px; color: #666; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="logo"><span>$</span> Conversor de moedas</div>
+        
+        <div style="text-align: left; font-size: 14px; color: #666; margin-bottom: 5px;">Valor</div>
+        <input type="number" id="amount" placeholder="Ex: 100" value="100">
+
+        <div style="display: flex; gap: 10px;">
+            <div style="flex: 1;">
+                <div style="text-align: left; font-size: 14px; color: #666;">De</div>
+                <select id="from">
+<option value="ARS">ARS 🇦🇷 (Peso Arg)</option>
+                    <option value="AUD">AUD 🇦🇺 (Dólar Aus)</option>
+                    <option value="BRL" selected>BRL 🇧🇷 (Real)</option>
+                    <option value="BTC">BTC ₿ (Bitcoin)</option>
+                    <option value="CAD">CAD 🇨🇦 (Dólar Can)</option>
+                    <option value="CHF">CHF 🇨🇭 (Franco Suíço)</option>
+                    <option value="CNY">CNY 🇨🇳 (Yuan Chinês)</option>
+                    <option value="EUR">EUR 🇪🇺 (Euro)</option>
+                    <option value="GBP">GBP 🇬🇧 (Libra)</option>
+                    <option value="JPY">JPY 🇯🇵 (Iene)</option>
+                    <option value="USD">USD 🇺🇸 (Dólar EUA)</option>
+                </select>
+            </div>
+            <div style="flex: 1;">
+                <div style="text-align: left; font-size: 14px; color: #666;">Para</div>
+                <select id="to">
+<option value="ARS">ARS 🇦🇷 (Peso Arg)</option>
+                    <option value="AUD">AUD 🇦🇺 (Dólar Aus)</option>
+                    <option value="BRL">BRL 🇧🇷 (Real)</option>
+                    <option value="BTC">BTC ₿ (Bitcoin)</option>
+                    <option value="CAD">CAD 🇨🇦 (Dólar Can)</option>
+                    <option value="CHF">CHF 🇨🇭 (Franco Suíço)</option>
+                    <option value="CNY">CNY 🇨🇳 (Yuan Chinês)</option>
+                    <option value="EUR">EUR 🇪🇺 (Euro)</option>
+                    <option value="GBP">GBP 🇬🇧 (Libra)</option>
+                    <option value="JPY">JPY 🇯🇵 (Iene)</option>
+                    <option value="USD" selected>USD 🇺🇸 (Dólar EUA)</option>
+                </select>
+            </div>
+        </div>
+
+        <button onclick="convert()">Converter Agora</button>
+
+        <div id="result" class="result-box">
+            <div class="result-value" id="converted-text">R$ 0,00</div>
+            <div class="rate-info" id="rate-text">Cotação: ...</div>
+        </div>
+    </div>
+
+    <script>
+        async function convert() {
+            const amount = document.getElementById('amount').value;
+            const from = document.getElementById('from').value;
+            const to = document.getElementById('to').value;
+            const resultBox = document.getElementById('result');
+            const btn = document.querySelector('button');
+
+            if (!amount) return alert("Digite um valor!");
+
+            // Feedback visual de carregamento
+            btn.innerText = "Calculando...";
+            btn.style.opacity = "0.7";
+
+            try {
+                // AQUI APLICAMOS A API: O Frontend chama o Backend
+                const response = await fetch(`/convert/${from}/${to}/${amount}`);
+                const data = await response.json();
+
+                // Mostra o resultado na tela
+                document.getElementById('converted-text').innerText = 
+                    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: to }).format(data.converted_value);
+                
+                document.getElementById('rate-text').innerText = 
+                    `Taxa: 1 ${from} = ${data.rate} ${to} (Fonte: ${data.source})`;
+
+                resultBox.style.display = 'block';
+            } catch (error) {
+                alert("Erro ao conectar com a API.");
+            }
+
+            btn.innerText = "Converter Agora";
+            btn.style.opacity = "1";
+        }
+    </script>
+</body>
+</html>
